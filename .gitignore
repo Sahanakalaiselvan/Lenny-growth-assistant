@@ -1,0 +1,24 @@
+# Environment & Secret Files
+.env
+.env.local
+*.env
+
+# Python Cache & Databases
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite3
+lenny_growth.db
+
+# Node.js & Dependencies
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+
+# IDE & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
