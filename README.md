@@ -150,43 +150,92 @@ Managed via **SQLAlchemy Async ORM** (`backend/db/models.py`). Fully compatible 
 
 ```mermaid
 erDiagram
-    SESSIONS ||--o{ MESSAGES : contains
-    SESSIONS ||--o{ ARTIFACTS : generates
+    SESSIONS ||--|{ MESSAGES : "1:N (contains message history)"
+    SESSIONS ||--o{ ARTIFACTS : "1:N (generates workspace artifacts)"
+    ARTIFACTS ||--o{ MESSAGES : "0:1 (links to assistant message)"
     
     SESSIONS {
-        string id PK
-        string title
-        string llm_provider
-        string llm_model
-        datetime created_at
-        datetime updated_at
+        VARCHAR_36 id PK "UUID Session Identifier"
+        VARCHAR_255 title "Conversation Title"
+        VARCHAR_50 llm_provider "ollama | anthropic | openai"
+        VARCHAR_50 llm_model "llama3.2 | claude-3-5-sonnet | gpt-4o"
+        TIMESTAMP created_at "Session Creation Timestamp"
+        TIMESTAMP updated_at "Last Message Timestamp"
     }
 
     MESSAGES {
-        string id PK
-        string session_id FK
-        string role
-        text content
-        json sources
-        string artifact_id FK
-        datetime created_at
+        VARCHAR_36 id PK "UUID Message Identifier"
+        VARCHAR_36 session_id FK "Foreign Key -> sessions.id"
+        VARCHAR_20 role "user | assistant | system"
+        TEXT content "Message Body Content"
+        JSONB sources "RAG Transcript Citations Array"
+        VARCHAR_36 artifact_id FK "Foreign Key -> artifacts.id (Optional)"
+        TIMESTAMP created_at "Message Creation Timestamp"
     }
 
     ARTIFACTS {
-        string id PK
-        string session_id FK
-        string title
-        string artifact_type
-        text content
-        string language
-        datetime created_at
+        VARCHAR_36 id PK "UUID Artifact Identifier"
+        VARCHAR_36 session_id FK "Foreign Key -> sessions.id"
+        VARCHAR_255 title "Artifact Title"
+        VARCHAR_50 artifact_type "html | markdown | code"
+        TEXT content "HTML Markup or Markdown Document Content"
+        VARCHAR_50 language "html | markdown"
+        TIMESTAMP created_at "Artifact Generation Timestamp"
     }
 
     APP_CONFIG {
-        string key PK
-        text value
-        datetime updated_at
+        VARCHAR_100 key PK "Configuration Setting Key"
+        TEXT value "Persisted Key Value (Encrypted/Stored)"
+        TIMESTAMP updated_at "Last Configuration Update"
     }
+```
+
+### Relational Foreign Key Data Flow
+
+```mermaid
+flowchart LR
+    classDef sessTable fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef msgTable fill:#0f172a,stroke:#6366f1,stroke-width:2px,color:#f8fafc;
+    classDef artTable fill:#164e63,stroke:#22d3ee,stroke-width:2px,color:#f8fafc;
+    classDef cfgTable fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+
+    subgraph Sess [" 🗂️ SESSIONS TABLE "]
+        S1["PK: id (UUID)"]
+        S2["title: VARCHAR"]
+        S3["llm_provider: VARCHAR"]
+        S4["llm_model: VARCHAR"]
+    end
+
+    subgraph Msg [" 💬 MESSAGES TABLE "]
+        M1["PK: id (UUID)"]
+        M2["FK: session_id -> sessions.id"]
+        M3["role: user | assistant"]
+        M4["content: TEXT"]
+        M5["sources: JSONB Citations"]
+        M6["FK: artifact_id -> artifacts.id"]
+    end
+
+    subgraph Art [" 🎨 ARTIFACTS TABLE "]
+        A1["PK: id (UUID)"]
+        A2["FK: session_id -> sessions.id"]
+        A3["title: VARCHAR"]
+        A4["artifact_type: html | markdown"]
+        A5["content: TEXT (HTML/Markdown)"]
+    end
+
+    subgraph Cfg [" ⚙️ APP_CONFIG TABLE "]
+        C1["PK: key (VARCHAR)"]
+        C2["value: TEXT (API Keys)"]
+    end
+
+    Sess -->|"1 : N CASCADE DELETE"| Msg
+    Sess -->|"1 : N CASCADE DELETE"| Art
+    Art -.->"0 : 1 OPTIONAL LINK"| Msg
+
+    class Sess sessTable;
+    class Msg msgTable;
+    class Art artTable;
+    class Cfg cfgTable;
 ```
 
 ### PostgreSQL DDL Script (For Supabase / Railway Deployment):
