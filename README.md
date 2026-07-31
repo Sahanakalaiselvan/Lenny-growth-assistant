@@ -50,46 +50,96 @@
 The application follows a decoupled multi-tier architecture:
 
 ```mermaid
-graph TB
-    subgraph Frontend [React 18 + Vite Web App]
-        UI[Dual-Pane Workspace UI]
-        Chat[Chat Window & Citation Badges]
-        ArtView[Side-by-Side Artifact Workspace]
-        KeyModal[API Key Config Modal]
+flowchart TD
+    %% Custom Styling Definitions
+    classDef client fill:#0f172a,stroke:#6366f1,stroke-width:2px,color:#f8fafc;
+    classDef api fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef engine fill:#31104b,stroke:#c084fc,stroke-width:2px,color:#f8fafc;
+    classDef db fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef provider fill:#164e63,stroke:#22d3ee,stroke-width:2px,color:#f8fafc;
+
+    subgraph Layer1 ["🖥️ CLIENT BROWSER LAYER (React 18 + Vite + Tailwind)"]
+        UI["Dual-Pane Chat Workspace"]
+        Stream["Interactive Chat Stream & Citations"]
+        ArtPanel["Side-by-Side Artifact Viewer (Sandboxed Iframe)"]
+        ConfigModal["API Key & LLM Switcher Modal"]
     end
 
-    subgraph Backend [FastAPI Server]
-        Router[API Endpoints Router]
-        Classify[Intent & Skill Classifier]
-        RAG[RAG Transcript Engine - 300+ Episodes]
-        LLMRouter[Flexible LLM Engine Router]
-        ArtExtract[Artifact Parser & Generator]
+    subgraph Layer2 ["⚡ FASTAPI BACKEND SERVER LAYER"]
+        APIGateway["FastAPI REST API Gateway (/api)"]
+        SessionMgr["Session & History Controller"]
+        Classifier["Intent & Skill Routing Engine"]
     end
 
-    subgraph DB [Database Layer]
-        ORM[SQLAlchemy Async Engine]
-        Database[(PostgreSQL / Supabase / SQLite)]
+    subgraph Layer3 ["🎙️ KNOWLEDGE BASE & RAG SEARCH ENGINE"]
+        Transcripts["303 Lenny's Podcast Transcripts Index"]
+        TFIDF["TF-IDF Similarity Search & Tokenizer"]
+        Booster["Guest Entity Name Booster (+0.35)"]
+        Guard["Strict Out-of-Domain Guard (0.15 Score Threshold)"]
     end
 
-    subgraph LLM_Engines [LLM Execution Engines]
-        Ollama[Local Ollama - llama3.2]
-        Claude[Anthropic Claude SDK]
-        OpenAI[OpenAI API - gpt-4o]
-        Fallback[Knowledge Synthesis Engine]
+    subgraph Layer4 ["⚙️ FLEXIBLE LLM ENGINE ROUTER"]
+        LLMSwitch["LLM Execution Router Switch"]
+        OllamaEngine["Local Ollama Server (llama3.2)"]
+        ClaudeEngine["Anthropic Claude SDK (claude-3-5-sonnet)"]
+        OpenAIEngine["OpenAI API (gpt-4o)"]
+        FallbackEngine["Knowledge Synthesis Engine (Zero-Key Demo)"]
     end
 
-    UI --> Router
-    Router --> Classify
-    Classify --> RAG
-    RAG --> LLMRouter
-    LLMRouter --> Ollama
-    LLMRouter --> Claude
-    LLMRouter --> OpenAI
-    LLMRouter --> Fallback
-    LLMRouter --> ArtExtract
-    ArtExtract --> ORM
-    ORM --> Database
-    ArtExtract --> ArtView
+    subgraph Layer5 ["🎨 ARTIFACT EXTRACTOR & PARSER"]
+        RegexParser["XML Tag Parser (<artifact>)"]
+        PRDBuilder["PRD Generator (19 Required Headers)"]
+        HTMLBuilder["HTML/CSS Live UI Generator"]
+    end
+
+    subgraph Layer6 ["🗄️ PERSISTENT DATABASE LAYER (SQLAlchemy Async ORM)"]
+        ORM["Async Session Manager"]
+        PostgresDB[("PostgreSQL / Supabase / Railway")]
+        SQLiteDB[("SQLite Local Fallback (lenny_growth.db)")]
+    end
+
+    %% Flow Connections
+    UI -->|"POST /api/chat"| APIGateway
+    APIGateway --> SessionMgr
+    APIGateway --> Classifier
+    
+    Classifier -->|"1. Transcript Query"| Transcripts
+    Transcripts --> TFIDF
+    TFIDF --> Booster
+    Booster --> Guard
+    
+    Guard -->|"2. Context Chunks"| LLMSwitch
+    
+    LLMSwitch -->|"Provider: Local"| OllamaEngine
+    LLMSwitch -->|"Provider: Claude"| ClaudeEngine
+    LLMSwitch -->|"Provider: OpenAI"| OpenAIEngine
+    LLMSwitch -->|"Provider: Offline Fallback"| FallbackEngine
+    
+    OllamaEngine --> RegexParser
+    ClaudeEngine --> RegexParser
+    OpenAIEngine --> RegexParser
+    FallbackEngine --> RegexParser
+    
+    RegexParser --> PRDBuilder
+    RegexParser --> HTMLBuilder
+    
+    PRDBuilder --> ORM
+    HTMLBuilder --> ORM
+    
+    ORM --> PostgresDB
+    ORM --> SQLiteDB
+    
+    HTMLBuilder -->|"3. Live Sandboxed Render"| ArtPanel
+    PRDBuilder -->|"3. Render Markdown"| ArtPanel
+    RegexParser -->|"3. Stream Response & Sources"| Stream
+
+    %% Apply Class Styles
+    class UI,Stream,ArtPanel,ConfigModal client;
+    class APIGateway,SessionMgr,Classifier api;
+    class Transcripts,TFIDF,Booster,Guard engine;
+    class LLMSwitch,OllamaEngine,ClaudeEngine,OpenAIEngine,FallbackEngine provider;
+    class RegexParser,PRDBuilder,HTMLBuilder engine;
+    class ORM,PostgresDB,SQLiteDB db;
 ```
 
 ---
