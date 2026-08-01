@@ -32,5 +32,14 @@ async def get_db():
             await session.close()
 
 async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    global engine, AsyncSessionLocal
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as e:
+        print(f"[Database Warning] Primary DB connection error ({e}). Falling back to local SQLite lenny_growth.db.")
+        sqlite_url = "sqlite+aiosqlite:///./lenny_growth.db"
+        engine = create_async_engine(sqlite_url, echo=False, connect_args={"check_same_thread": False})
+        AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
