@@ -20,9 +20,9 @@
 
 ## 🎥 2-Minute Demo Video
 
-[![Watch Demo Video](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](YOUR_YOUTUBE_VIDEO_LINK_HERE)
+[![Watch Demo Video](https://img.shields.io/badge/YouTube-Watch%20Demo%20Video-red?style=for-the-badge&logo=youtube)](https://youtu.be/5xYT37Tyk4s)
 
-> **Demo Video Link:** [https://youtu.be/YOUR_VIDEO_ID](YOUR_YOUTUBE_VIDEO_LINK_HERE)  
+> **Demo Video Link:** [https://youtu.be/5xYT37Tyk4s](https://youtu.be/5xYT37Tyk4s)  
 > *(Camera enabled, free-form walkthrough of Q&A grounding, Ship30for30 essay skill, and side-by-side Artifact Workspace).*
 
 ---
