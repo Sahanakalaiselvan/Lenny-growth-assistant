@@ -1,5 +1,9 @@
 import os
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+
+# Automatically load .env file into environment variables
+load_dotenv()
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "The Lenny Growth Assistant"
